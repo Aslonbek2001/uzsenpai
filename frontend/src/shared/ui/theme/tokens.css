@@ -1,0 +1,200 @@
+/* UzSenpai design tokens — "Sumi & Ai". See frontend/DESIGN.md.
+   Import once from src/app/styles/index.css right after `@import "tailwindcss";`.
+
+   Fonts are SELF-HOSTED (no third-party requests on prepaid mobile data, cached by the PWA):
+   put the OFL woff2 files in frontend/public/fonts/ — Onest (latin + cyrillic, variable),
+   Zen Kaku Gothic New 400/700 and Klee One 600, Japanese ones subset to JIS level 1–2 kanji + kana. */
+
+@font-face {
+  font-family: "Onest";
+  src: url("/fonts/onest-variable.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Zen Kaku Gothic New";
+  src: url("/fonts/zen-kaku-gothic-new-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Zen Kaku Gothic New";
+  src: url("/fonts/zen-kaku-gothic-new-700.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Klee One";
+  src: url("/fonts/klee-one-600.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+/* Metric-matched fallback so text doesn't jump when Onest arrives */
+@font-face {
+  font-family: "Onest Fallback";
+  src: local("Arial");
+  size-adjust: 104%;
+  ascent-override: 92%;
+  descent-override: 24%;
+}
+
+:root {
+  color-scheme: light;
+
+  /* Colour — light */
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-sunken: #e8ecf2;
+  --ink: #17202f;
+  --ink-muted: #5a6578;
+  --line: #d6dce5;          /* dividers only (decorative) */
+  --line-strong: #737e92;   /* input / control borders — ≥ 3:1 on surface, bg and sunken */
+  --ai: #233f73;
+  --ai-hover: #1b3360;
+  --fuji: #5b3f8c;
+  --fuji-hover: #4b3375;
+  --wakatake: #2e7d62;
+  --wakatake-hover: #246650;
+  --yamabuki: #e3a21a;      /* fills/backgrounds only — fails contrast as text */
+  --yamabuki-soft: #fdf3dc;
+  --yamabuki-ink: #8a5a00;  /* text on white or yamabuki-soft (≥ 5.3:1) */
+  --shu: #c8382b;
+  --on-accent: #ffffff;
+
+  --accent: var(--ai);
+  --accent-hover: var(--ai-hover);
+
+  /* Shape */
+  --radius-sm: 8px;   /* inputs, chips */
+  --radius-md: 12px;  /* buttons, small cards */
+  --radius-lg: 20px;  /* sheets, feature cards */
+  --radius-full: 999px;
+
+  /* Elevation — ink-tinted, used sparingly */
+  --shadow-1: 0 1px 2px color-mix(in oklab, var(--ink) 8%, transparent);
+  --shadow-2: 0 8px 24px -8px color-mix(in oklab, var(--ink) 18%, transparent);
+
+  /* Motion */
+  --dur-press: 90ms;
+  --dur-fast: 150ms;
+  --dur-base: 220ms;
+  --dur-slow: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --press-scale: 0.97;
+
+  /* Layout */
+  --gutter: 16px;
+  --tabbar-h: calc(64px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) { :root { --gutter: 24px; } }
+@media (min-width: 1024px) { :root { --gutter: 32px; } }
+
+[data-space="learn"]  { --accent: var(--ai);       --accent-hover: var(--ai-hover); }
+[data-space="career"] { --accent: var(--fuji);     --accent-hover: var(--fuji-hover); }
+[data-space="visa"]   { --accent: var(--wakatake); --accent-hover: var(--wakatake-hover); }
+
+/* Derived from --accent: re-declared wherever --accent changes so spaces get their own soft tint */
+:root, [data-space] {
+  --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+/* Dark — "Yoru". System by default, [data-theme] overrides. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0e1420; --surface: #161e2e; --surface-sunken: #0a0f18;
+    --ink: #e6eaf1; --ink-muted: #9aa5b8; --line: #263247; --line-strong: #717e99;
+    --ai: #8faee6; --ai-hover: #a9c1ee; --fuji: #b9a2e3; --fuji-hover: #cbb8ec; --wakatake: #6cc9a6; --wakatake-hover: #86d6b7;
+    --yamabuki: #f2c14e; --yamabuki-soft: #3a2f12; --yamabuki-ink: #f2c14e; --shu: #f07466; --on-accent: #0e1420;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e1420; --surface: #161e2e; --surface-sunken: #0a0f18;
+  --ink: #e6eaf1; --ink-muted: #9aa5b8; --line: #263247; --line-strong: #717e99;
+  --ai: #8faee6; --ai-hover: #a9c1ee; --fuji: #b9a2e3; --fuji-hover: #cbb8ec; --wakatake: #6cc9a6; --wakatake-hover: #86d6b7;
+  --yamabuki: #f2c14e; --yamabuki-soft: #3a2f12; --yamabuki-ink: #f2c14e; --shu: #f07466; --on-accent: #0e1420;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-base: 120ms; --dur-slow: 150ms; --press-scale: 1; }
+}
+
+/* Tailwind v4 theme → bg-surface, text-ink, text-muted, border-line-strong, bg-accent, font-study …
+   Colours point at the runtime variables above (they change per space/theme); static values are literal. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-sunken: var(--surface-sunken);
+  --color-ink: var(--ink);
+  --color-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-ai: var(--ai);
+  --color-fuji: var(--fuji);
+  --color-wakatake: var(--wakatake);
+  --color-yamabuki: var(--yamabuki);
+  --color-yamabuki-soft: var(--yamabuki-soft);
+  --color-yamabuki-ink: var(--yamabuki-ink);
+  --color-shu: var(--shu);
+
+  --font-sans: "Onest", "Onest Fallback", "Zen Kaku Gothic New", system-ui, sans-serif;
+  --font-ja: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-study: "Klee One", "Zen Kaku Gothic New", serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+}
+
+/* Base — the global anti-flicker / anti-jump layer */
+@layer base {
+  html {
+    scrollbar-gutter: stable;           /* no shift when dialogs lock scroll */
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  :lang(ja) {
+    font-family: var(--font-ja);
+    line-height: 1.8;
+    line-break: strict;
+    word-break: auto-phrase;
+  }
+  rt { font-size: 0.55em; color: var(--ink-muted); }
+  /* Outline follows each element's own radius (no shape jump) and survives forced-colors mode */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button, [role="button"], a { touch-action: manipulation; }
+  img, video { max-width: 100%; height: auto; }
+  input, select, textarea { font-size: max(16px, 1rem); border-color: var(--line-strong); } /* no iOS zoom */
+  .tabular { font-variant-numeric: tabular-nums; }
+}
+
+/* Genkō yōshi grid — ONLY for kanji practice / writing canvas */
+.genko-grid {
+  --cell: 56px;
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--shu) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--shu) 22%, transparent) 1px, transparent 1px);
+  background-size: var(--cell) var(--cell);
+}

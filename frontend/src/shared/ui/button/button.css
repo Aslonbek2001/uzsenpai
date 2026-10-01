@@ -1,0 +1,58 @@
+@layer components {
+  .btn {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font: inherit;
+    font-weight: 600;
+    line-height: 1.2;
+    padding-block: 8px;
+    text-align: center;
+    text-wrap: balance; /* long ru/ja labels wrap instead of overflowing at 360px */
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition:
+      transform var(--dur-press) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+
+  .btn__label { display: inline-flex; align-items: center; gap: 0.5em; }
+  .btn__spinner { position: absolute; inset: 0; display: grid; place-items: center; }
+  .btn__spinner svg { animation: btn-spin 0.8s linear infinite; }
+
+  /* Loading: keep exact size, hide label, keep full opacity (no flicker) */
+  .btn[data-loading] .btn__label { visibility: hidden; }
+  .btn[aria-busy="true"] { cursor: progress; }
+
+  .btn:active:not(:disabled):not([aria-busy="true"]) { transform: scale(var(--press-scale)); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn--sm { min-height: 36px; padding-inline: 12px; font-size: 0.875rem; }
+  .btn--md { min-height: 44px; padding-inline: 18px; font-size: 1rem; }
+  .btn--lg { min-height: 52px; padding-inline: 24px; font-size: 1.0625rem; border-radius: var(--radius-lg); }
+  .btn--full { width: 100%; }
+
+  .btn--primary { background: var(--accent); color: var(--on-accent); }
+  .btn--secondary { background: var(--surface); color: var(--ink); border-color: var(--line-strong); }
+  .btn--ghost { background: transparent; color: var(--accent); }
+  .btn--danger { background: var(--shu); color: var(--on-accent); }
+
+  /* Hover only where hover exists — prevents "stuck" hover flicker on touch screens */
+  @media (hover: hover) and (pointer: fine) {
+    .btn--primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn--secondary:hover:not(:disabled) { border-color: var(--accent); }
+    .btn--ghost:hover:not(:disabled) { background: var(--accent-soft); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn__spinner svg { animation-duration: 1.6s; }
+  }
+}
+
+@keyframes btn-spin { to { transform: rotate(360deg); } }
