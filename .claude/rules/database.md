@@ -12,11 +12,11 @@ paths:
 - Table names prefixed with the owning module (`learning_lessons`, `rag_chunks`).
 - Primary keys: `id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid7)` (`app.shared.ids`).
 - Timestamps: `DateTime(timezone=True)` (UTC), `server_default=func.now()` for created/updated times.
-- Enums: `Enum(MyStrEnum, native_enum=False, length=N, values_callable=…)` + an explicit
-  `CheckConstraint("col IN (…)", name="<col>")` in `__table_args__` (not `create_constraint=True`, which
-  duplicates the check with our naming convention). Example: `app/core/outbox.py`.
+- Enums: `mapped_column(str_enum(MyStrEnum))` + `enum_check("col", MyStrEnum)` in `__table_args__` (both in
+  `app/core/db.py`): VARCHAR + one CHECK named `ck_<table>_<col>`. Never native PG enums.
 - Constraint/index names come from the naming convention in `app/core/db.py`; only partial indexes get a
   descriptive hand-written name (`ix_<table>_<purpose>`, e.g. `ix_core_outbox_due`).
 - No foreign keys across modules unless an ADR in docs/adr allows it; store the id instead.
+  Allowed so far: `auth_*` → `users_users` (ADR 0008).
 - Large data changes go in a separate data migration, batched, never in the same revision as schema changes.
 - Never edit a migration already merged into main — create a new one (a hook blocks this).

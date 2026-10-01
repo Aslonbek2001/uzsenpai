@@ -32,7 +32,7 @@ Section 3 items are not chosen yet — don't write code that depends on them wit
 | Database | PostgreSQL 17 + pgvector extension and `pgvector` Python package (one DB for app data and RAG vectors) |
 | ORM / migrations | SQLAlchemy 2.x async (currently 2.1) + asyncpg, Alembic |
 | Cache / queues | Redis; background tasks with **Taskiq** (`taskiq` + `taskiq-redis`) — [ADR 0001](adr/0001-taskiq-for-background-tasks.md) |
-| Auth | Short-lived JWT access token (memory) + rotating refresh token in an httpOnly cookie, Telegram Login, argon2 password hashing (argon2-cffi) |
+| Auth | Sign-in: Telegram, email + password, Google ([ADR 0007](adr/0007-google-login-and-pyjwt.md)). JWT access token 15 min (memory) via PyJWT + rotating refresh token 30 days in an httpOnly cookie (reuse → family revoked); argon2 password hashing (argon2-cffi); email codes in Redis (15 min, 5 attempts) |
 | Embeddings (RAG) | Voyage AI (Anthropic has no embeddings API) behind an `EmbeddingProvider` interface; ranking = reciprocal-rank fusion (no reranker) |
 | National payments (UZS) | **Rahmat** (rhmt.uz) — one integration covers Humo, Uzcard, Visa/Mastercard and Click/Payme/Uzum wallets; adapter in `billing/providers/rahmat/` — [ADR 0002](adr/0002-rahmat-national-payments.md). Integration waits for merchant docs; prep in [docs/payments/rahmat.md](payments/rahmat.md) |
 | File storage | S3-compatible object storage via aioboto3 in staging/prod; local-disk adapter in local dev (no extra compose service) |

@@ -1,10 +1,11 @@
 """app/core/db.py — engine, Base, one session (= one transaction) per request."""
 
 from collections.abc import AsyncIterator
+from enum import StrEnum
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import MetaData
+from sqlalchemy import CheckConstraint, Enum, MetaData
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -31,6 +32,23 @@ NAMING_CONVENTION = {
 
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+def str_enum(enum_cls: type[StrEnum], *, length: int = 20) -> Enum:
+    """Column type for a StrEnum: VARCHAR storing `.value` (adding a value later = a small migration).
+    Pair it with `enum_check(...)` in `__table_args__`."""
+    return Enum(
+        enum_cls,
+        native_enum=False,
+        length=length,
+        values_callable=lambda members: [m.value for m in members],
+    )
+
+
+def enum_check(column: str, enum_cls: type[StrEnum]) -> CheckConstraint:
+    """CHECK (<column> IN (...)) named by the convention: ck_<table>_<column>."""
+    values = ", ".join(f"'{m.value}'" for m in enum_cls)
+    return CheckConstraint(f"{column} IN ({values})", name=column)
 
 
 async def get_session() -> AsyncIterator[AsyncSession]:
