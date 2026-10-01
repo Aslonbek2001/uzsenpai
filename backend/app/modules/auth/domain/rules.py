@@ -18,6 +18,10 @@ VERIFICATION_CODE_DIGITS = 6
 PASSWORD_MIN_LENGTH = 8
 PASSWORD_MAX_LENGTH = 128  # bounds argon2 work per request
 
+OAUTH_STATE_TTL = timedelta(minutes=10)
+SESSION_PURGE_EXPIRED_AFTER = timedelta(days=7)  # expired refresh rows kept a week (support/debugging)
+SESSION_PURGE_REVOKED_AFTER = timedelta(days=30)  # revoked rows kept a month (reuse detection, audit)
+
 TELEGRAM_AUTH_MAX_AGE = timedelta(minutes=10)  # Login Widget data older than this is refused (limits replay)
 
 # Brute-force limits: (attempts, window). Login and code checks count FAILURES only.

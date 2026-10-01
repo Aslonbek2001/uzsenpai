@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.users.domain.enums import UserRole, UserStatus
+from app.modules.users.domain.events import UserDeleted, UserDeletionRequested
 from app.modules.users.repositories import UserRepository
 from app.shared.i18n import Locale
 
@@ -21,7 +22,7 @@ class UserDTO(BaseModel):
 
     @property
     def can_sign_in(self) -> bool:
-        """Deleted (anonymized) users can't sign in; a pending deletion is cancelled by signing in (2b)."""
+        """Deleted (anonymized) users can't sign in; during the grace period they can, to restore the account."""
         return self.status != UserStatus.DELETED
 
 
@@ -39,4 +40,4 @@ class UsersFacade:
         return None if user is None else UserDTO.model_validate(user)
 
 
-__all__ = ["UserDTO", "UserRole", "UserStatus", "UsersFacade"]
+__all__ = ["UserDTO", "UserDeleted", "UserDeletionRequested", "UserRole", "UserStatus", "UsersFacade"]

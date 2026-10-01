@@ -22,7 +22,8 @@ class TelegramAuthService:
         self.users = UsersFacade(session)
         self.sessions = SessionService(session)
 
-    async def login_widget(self, data: TelegramLoginIn, locale: Locale, client: ClientInfo) -> IssuedTokens:
+    @staticmethod
+    def verify(data: TelegramLoginIn) -> None:
         valid = verify_login_widget(
             data.signed_fields(),
             bot_token=settings.telegram_bot_token,
@@ -31,6 +32,9 @@ class TelegramAuthService:
         )
         if not valid:
             raise InvalidTelegramData("auth.invalid_telegram_data")
+
+    async def login_widget(self, data: TelegramLoginIn, locale: Locale, client: ClientInfo) -> IssuedTokens:
+        self.verify(data)
         name = " ".join(part for part in (data.first_name, data.last_name) if part)
         user, _ = await self.resolve_or_create(data.id, name, locale)
         return await self.sessions.start(user, client)

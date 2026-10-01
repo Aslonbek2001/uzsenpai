@@ -1,6 +1,7 @@
 """app/core/db.py — engine, Base, one session (= one transaction) per request."""
 
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from enum import StrEnum
 from typing import Annotated
 
@@ -51,13 +52,10 @@ def enum_check(column: str, enum_cls: type[StrEnum]) -> CheckConstraint:
     return CheckConstraint(f"{column} IN ({values})", name=column)
 
 
-async def get_session() -> AsyncIterator[AsyncSession]:
-    """One session = one transaction per request. Commits once at the end; events run only after commit.
-
-    Always use it through `SessionDep` (scope="function"): FastAPI then finishes this dependency — including the
-    COMMIT — BEFORE the response is sent. With the default request scope the client (e.g. a payment provider)
-    would receive 200 before the commit, and a failed commit would silently lose a paid order.
-    """
+@asynccontextmanager
+async def unit_of_work() -> AsyncIterator[AsyncSession]:
+    """One transaction outside a request (Taskiq jobs, scripts): commit at the end, then run after-commit events
+    (incl. kicking new outbox rows). Rolls back and drops queued events on error."""
     async with SessionFactory() as session:
         try:
             yield session
@@ -67,6 +65,17 @@ async def get_session() -> AsyncIterator[AsyncSession]:
             bus.discard(session)
             raise
         await bus.dispatch_committed(session)
+
+
+async def get_session() -> AsyncIterator[AsyncSession]:
+    """One session = one transaction per request. Commits once at the end; events run only after commit.
+
+    Always use it through `SessionDep` (scope="function"): FastAPI then finishes this dependency — including the
+    COMMIT — BEFORE the response is sent. With the default request scope the client (e.g. a payment provider)
+    would receive 200 before the commit, and a failed commit would silently lose a paid order.
+    """
+    async with unit_of_work() as session:
+        yield session
 
 
 SessionDep = Annotated[AsyncSession, Depends(get_session, scope="function")]

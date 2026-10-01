@@ -14,6 +14,7 @@ dependencies = [
     "taskiq-redis>=1.0",
     "argon2-cffi>=23.1",
     "pyjwt[crypto]>=2.10",
+    "httpx>=0.28",
 ]
 
 [dependency-groups]

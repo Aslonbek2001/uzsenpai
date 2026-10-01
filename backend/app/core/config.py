@@ -25,13 +25,20 @@ class Settings(BaseSettings):
     taskiq_broker_url: str = "redis://localhost:6379/1"
 
     cors_origins: list[str] = ["http://localhost:5173"]
-    public_web_url: str = "http://localhost:5173"
+    public_web_url: str = "http://localhost:5173"  # the website (redirect targets after OAuth)
+    public_api_url: str = "http://localhost:8000"  # this API as browsers reach it (OAuth callback URL)
 
     # Auth (ADR 0007)
     jwt_secret: str = DEV_JWT_SECRET
     refresh_cookie_secure: bool = True  # False only for plain-http local development
     telegram_bot_token: str = ""  # verifies Telegram Login Widget data
     bot_service_token: str = ""  # the bot's credential for /api/v1 (with X-Telegram-User-Id)
+    google_client_id: str = ""  # Google sign-in is disabled (503) until both are set
+    google_client_secret: str = ""
+
+    @property
+    def google_enabled(self) -> bool:
+        return bool(self.google_client_id and self.google_client_secret)
 
     @property
     def is_local(self) -> bool:

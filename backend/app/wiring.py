@@ -6,6 +6,7 @@ the worker must be able to run them. Both call `wire_events()`, so the two lists
 
 from app.core.events import bus
 from app.core.outbox_tasks import kick
+from app.modules.auth.handlers import register as register_auth
 
 _wired = False
 
@@ -16,6 +17,5 @@ def wire_events() -> None:
         return
     _wired = True
     bus.on_outbox_committed = kick
-    # One line per module that reacts to events, e.g.:
-    # from app.modules.orders.handlers import register as register_orders
-    # register_orders(bus)
+    # One line per module that reacts to events
+    register_auth(bus)

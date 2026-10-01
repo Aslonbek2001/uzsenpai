@@ -40,16 +40,16 @@ class EmailAuthService:
 
     async def register(self, data: RegisterIn, locale: Locale, client: ClientInfo) -> None:
         email = normalize_email(data.email)
-        await self._limit_code_requests(email, client)
+        await self.limit_code_requests(email, client)
         if await self.identities.get(AuthProvider.EMAIL, email) is not None:
             return  # already registered: same answer as success (the owner can use "forgot password")
-        await self._send_code(CodePurpose.SIGNUP, email, locale)
+        await self.send_code(CodePurpose.SIGNUP, email, locale)
 
     async def verify_email(self, data: VerifyEmailIn, client: ClientInfo) -> IssuedTokens:
         """The code proves the mailbox: only now are the user and the identity created, with the password the
         code holder chose."""
         email = normalize_email(data.email)
-        payload = await self._redeem(CodePurpose.SIGNUP, email, data.code, client)
+        payload = await self.redeem(CodePurpose.SIGNUP, email, data.code, client)
         if await self.identities.get(AuthProvider.EMAIL, email) is not None:
             raise InvalidCode("auth.invalid_code")
         user = await self.users.create(display_name=data.display_name, locale=Locale(payload["locale"]))
@@ -85,22 +85,22 @@ class EmailAuthService:
 
     async def forgot_password(self, data: ForgotPasswordIn, locale: Locale, client: ClientInfo) -> None:
         email = normalize_email(data.email)
-        await self._limit_code_requests(email, client)
+        await self.limit_code_requests(email, client)
         if await self.identities.get(AuthProvider.EMAIL, email) is None:
             return  # same answer as success
-        await self._send_code(CodePurpose.PASSWORD_RESET, email, locale)
+        await self.send_code(CodePurpose.PASSWORD_RESET, email, locale)
 
     async def reset_password(self, data: ResetPasswordIn, client: ClientInfo) -> None:
         """New password + every device signed out (the old password may be known to someone else)."""
         email = normalize_email(data.email)
-        await self._redeem(CodePurpose.PASSWORD_RESET, email, data.code, client)
+        await self.redeem(CodePurpose.PASSWORD_RESET, email, data.code, client)
         identity = await self.identities.get(AuthProvider.EMAIL, email)
         if identity is None:
             raise InvalidCode("auth.invalid_code")
         await self.identities.set_password(identity, await hash_password(data.new_password))
         await self.sessions.logout_all(identity.user_id, SessionRevokeReason.PASSWORD_CHANGED)
 
-    async def _redeem(self, purpose: CodePurpose, email: str, code: str, client: ClientInfo) -> dict[str, str]:
+    async def redeem(self, purpose: CodePurpose, email: str, code: str, client: ClientInfo) -> dict[str, str]:
         """Consume a code; wrong codes count against the email (per day) and the IP (per 15 min)."""
         email_key, ip_key = f"code-fail:email:{email}", f"code-fail:ip:{client.ip}"
         await rate_limit.ensure_allowed(email_key, limit=CODE_FAILURES_PER_EMAIL[0])
@@ -114,14 +114,14 @@ class EmailAuthService:
             raise InvalidCode("auth.invalid_code")
         return payload
 
-    async def _limit_code_requests(self, email: str, client: ClientInfo) -> None:
+    async def limit_code_requests(self, email: str, client: ClientInfo) -> None:
         limit, window = CODE_REQUESTS_PER_EMAIL
         await rate_limit.hit(f"code-request:email:{email}", limit=limit, window=window)
         if client.ip is not None:  # unknown IP (proxy misconfigured) must not become one shared bucket
             limit, window = CODE_REQUESTS_PER_IP
             await rate_limit.hit(f"code-request:ip:{client.ip}", limit=limit, window=window)
 
-    async def _send_code(self, purpose: CodePurpose, email: str, locale: Locale) -> None:
+    async def send_code(self, purpose: CodePurpose, email: str, locale: Locale) -> None:
         code = new_verification_code()
         await self.codes.put(purpose, email, code, {"locale": locale.value})
         await self.sender.send(email=email, code=code, purpose=purpose, locale=locale)

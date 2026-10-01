@@ -5,15 +5,12 @@ Composition root for background work: import every module's `jobs` package here 
 
 from taskiq import TaskiqEvents, TaskiqState
 
-import app.core.outbox_tasks  # noqa: F401  (registers outbox process/sweep/purge tasks)
+# One line per module with background tasks
 from app.core.db import engine
 from app.core.logging import configure_logging
 from app.core.redis import redis
 from app.core.tasks import broker
 from app.wiring import wire_events
-
-# One line per module with background tasks, e.g.:
-# import app.modules.resume.jobs
 
 __all__ = ["broker"]
 

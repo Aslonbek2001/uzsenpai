@@ -81,6 +81,9 @@ a deployment without `ENV` refuses to start; dev-only features check `settings.i
   external side effects are at-least-once → dedupe by `event.id`. Durable handler names are stored in the DB:
   never rename one while rows may be pending. Code: `app/core/outbox*.py`.
 - Subscriptions are registered in `app/wiring.py` (used by both the API and the worker), never in modules.
+- A module's handlers live in `handlers/` with a `register(bus)` function, called from `app/wiring.py`.
+- Taskiq tasks (`jobs/`) own their transaction: `async with unit_of_work() as session:` (`app.core.db`) — it
+  commits, then kicks new outbox rows. Import the module's `jobs` package in `app/worker.py`.
 
 ## Where things go — quick decisions
 

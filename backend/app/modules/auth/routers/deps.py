@@ -8,10 +8,14 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.config import settings
 from app.core.db import SessionDep
+from app.modules.auth.domain.exceptions import ProviderUnavailable
 from app.modules.auth.providers.email import CodeSender, LogCodeSender
+from app.modules.auth.providers.google import GoogleOAuth, GoogleOAuthClient
 from app.modules.auth.services import (
     ClientInfo,
     EmailAuthService,
+    GoogleAuthService,
+    LinkService,
     SessionService,
     TelegramAuthService,
     is_bot_token,
@@ -24,6 +28,20 @@ def get_code_sender() -> CodeSender:
     if not settings.is_local:
         raise RuntimeError("no email sender configured outside local/test — wire the notifications sender")
     return LogCodeSender()
+
+
+GOOGLE_CALLBACK_PATH = "/api/v1/auth/google/callback"
+
+
+def get_google() -> GoogleOAuth:
+    """Overridden in tests. 503 `auth.provider_unavailable` until GOOGLE_CLIENT_ID/SECRET are set."""
+    if not settings.google_enabled:
+        raise ProviderUnavailable("auth.provider_unavailable")
+    return GoogleOAuthClient(
+        client_id=settings.google_client_id,
+        client_secret=settings.google_client_secret,
+        redirect_uri=f"{settings.public_api_url}{GOOGLE_CALLBACK_PATH}",
+    )
 
 
 def get_client_info(request: Request) -> ClientInfo:
@@ -42,6 +60,18 @@ def get_locale(request: Request) -> Locale:
 
 def get_email_auth(session: SessionDep, sender: Annotated[CodeSender, Depends(get_code_sender)]) -> EmailAuthService:
     return EmailAuthService(session, sender)
+
+
+def get_link_service(session: SessionDep, sender: Annotated[CodeSender, Depends(get_code_sender)]) -> LinkService:
+    return LinkService(session, sender)
+
+
+def get_google_auth(
+    session: SessionDep,
+    google: Annotated[GoogleOAuth, Depends(get_google)],
+    sender: Annotated[CodeSender, Depends(get_code_sender)],
+) -> GoogleAuthService:
+    return GoogleAuthService(session, google, sender)
 
 
 def get_session_service(session: SessionDep) -> SessionService:
@@ -64,3 +94,5 @@ RequestLocale = Annotated[Locale, Depends(get_locale)]
 EmailAuth = Annotated[EmailAuthService, Depends(get_email_auth)]
 Sessions = Annotated[SessionService, Depends(get_session_service)]
 TelegramAuth = Annotated[TelegramAuthService, Depends(get_telegram_auth)]
+Links = Annotated[LinkService, Depends(get_link_service)]
+GoogleAuth = Annotated[GoogleAuthService, Depends(get_google_auth)]

@@ -7,7 +7,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
-from app.modules.users.domain.enums import JlptLevel, UserGoal, UserRole
+from app.modules.users.domain.enums import JlptLevel, UserGoal, UserRole, UserStatus
 from app.modules.users.domain.rules import DISPLAY_NAME_MAX
 from app.shared.i18n import Locale
 
@@ -22,6 +22,8 @@ class MeOut(BaseModel):
     display_name: str
     locale: Locale
     role: UserRole
+    status: UserStatus  # deletion_requested → show "restore account"
+    deletion_requested_at: datetime | None
     residence_country: str | None
     timezone: str
     jlpt_level: JlptLevel | None

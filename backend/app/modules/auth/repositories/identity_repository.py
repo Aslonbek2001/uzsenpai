@@ -3,7 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.domain.enums import AuthProvider
@@ -49,3 +49,22 @@ class IdentityRepository:
     async def set_password(self, identity: Identity, password_hash: str) -> None:
         identity.password_hash = password_hash
         await self.session.flush()
+
+    async def list_for_user(self, user_id: uuid.UUID) -> list[Identity]:
+        stmt = select(Identity).where(Identity.user_id == user_id).order_by(Identity.created_at)
+        return list(await self.session.scalars(stmt))
+
+    async def get_for_user(self, user_id: uuid.UUID, provider: AuthProvider) -> Identity | None:
+        return await self.session.scalar(
+            select(Identity).where(Identity.user_id == user_id, Identity.provider == provider)
+        )
+
+    async def count_for_user(self, user_id: uuid.UUID) -> int:
+        return int(await self.session.scalar(select(func.count()).where(Identity.user_id == user_id)) or 0)
+
+    async def remove(self, identity: Identity) -> None:
+        await self.session.delete(identity)
+        await self.session.flush()
+
+    async def remove_all_for_user(self, user_id: uuid.UUID) -> None:
+        await self.session.execute(delete(Identity).where(Identity.user_id == user_id))

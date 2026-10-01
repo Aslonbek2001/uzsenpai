@@ -11,6 +11,11 @@ REFRESH_COOKIE_PATH = "/api/v1/auth"
 
 
 def tokens_response(response: Response, tokens: IssuedTokens) -> TokenOut:
+    set_refresh_cookie(response, tokens)
+    return TokenOut(access_token=tokens.access_token, expires_in=tokens.expires_in)
+
+
+def set_refresh_cookie(response: Response, tokens: IssuedTokens) -> None:
     response.set_cookie(
         REFRESH_COOKIE,
         tokens.refresh_token,
@@ -21,7 +26,6 @@ def tokens_response(response: Response, tokens: IssuedTokens) -> TokenOut:
         samesite="lax",  # not sent on cross-site POSTs → no CSRF on /refresh
     )
     response.headers["Cache-Control"] = "no-store"
-    return TokenOut(access_token=tokens.access_token, expires_in=tokens.expires_in)
 
 
 def clear_refresh_cookie(response: Response) -> None:

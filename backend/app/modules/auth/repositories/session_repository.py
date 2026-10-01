@@ -1,10 +1,10 @@
 """The only code that queries auth_sessions."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.auth.domain.enums import SessionRevokeReason
@@ -73,3 +73,14 @@ class SessionRepository:
 
     async def family_owner(self, family_id: uuid.UUID) -> uuid.UUID | None:
         return await self.session.scalar(select(Session.user_id).where(Session.family_id == family_id).limit(1))
+
+    async def purge(self, *, expired_for: timedelta, revoked_for: timedelta) -> int:
+        result = await self.session.execute(
+            delete(Session).where(
+                or_(
+                    Session.expires_at < func.now() - expired_for,
+                    Session.revoked_at < func.now() - revoked_for,
+                )
+            )
+        )
+        return int(result.rowcount)  # type: ignore[attr-defined]

@@ -21,3 +21,9 @@ class SessionRevokeReason(StrEnum):
 class CodePurpose(StrEnum):
     SIGNUP = "signup"
     PASSWORD_RESET = "password_reset"  # noqa: S105 — a purpose name, not a secret
+    LINK_EMAIL = "link_email"  # add email + password to an existing account
+
+
+class OAuthMode(StrEnum):
+    LOGIN = "login"
+    LINK = "link"
