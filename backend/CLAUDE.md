@@ -1,6 +1,6 @@
 # Backend — FastAPI modular monolith
 
-Python 3.13, FastAPI, SQLAlchemy 2.0 (async) + asyncpg, Alembic, Pydantic v2, pydantic-settings,
+Python 3.13, FastAPI, SQLAlchemy 2.x (async) + asyncpg, Alembic, Pydantic v2, pydantic-settings,
 PostgreSQL 17 + pgvector, Redis + Taskiq, Anthropic Python SDK. Package manager: **uv**. (docs/STACK.md)
 Runnable reference code: `modular-monolith` skill (core, shared, `visa` module, conftest) and
 `payments-billing` skill (`catalog`, `billing` with providers). Also `llm-rag`, `i18n` skills.
@@ -10,7 +10,9 @@ Runnable reference code: `modular-monolith` skill (core, shared, `visa` module, 
 ```
 backend/
 ├── app/
-│   ├── main.py              # composition root: create_app() wires routers, error handlers, providers, events
+│   ├── main.py              # API composition root: create_app() wires routers, error handlers, providers
+│   ├── worker.py            # Taskiq worker entry; scheduler.py = the single periodic-task scheduler
+│   ├── wiring.py            # event subscriptions, shared by API and worker
 │   ├── core/                # config, db/session, event bus, outbox, security, logging — no business logic
 │   ├── shared/              # errors, i18n (Locale, LocalizedText), money (Money), pagination — no business logic
 │   └── modules/

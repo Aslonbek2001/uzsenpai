@@ -30,7 +30,7 @@ Section 3 items are not chosen yet — don't write code that depends on them wit
 | Frontend tooling | pnpm (via corepack), ESLint, Prettier, Vitest + Testing Library, openapi-typescript (API types from FastAPI OpenAPI), @hookform/resolvers |
 | Python tooling | Python 3.13, uv, ruff, mypy, pytest + pytest-asyncio, import-linter |
 | Database | PostgreSQL 17 + pgvector extension and `pgvector` Python package (one DB for app data and RAG vectors) |
-| ORM / migrations | SQLAlchemy 2.0 async + asyncpg, Alembic |
+| ORM / migrations | SQLAlchemy 2.x async (currently 2.1) + asyncpg, Alembic |
 | Cache / queues | Redis; background tasks with **Taskiq** (`taskiq` + `taskiq-redis`) — [ADR 0001](adr/0001-taskiq-for-background-tasks.md) |
 | Auth | Short-lived JWT access token (memory) + rotating refresh token in an httpOnly cookie, Telegram Login, argon2 password hashing (argon2-cffi) |
 | Embeddings (RAG) | Voyage AI (Anthropic has no embeddings API) behind an `EmbeddingProvider` interface; ranking = reciprocal-rank fusion (no reranker) |
