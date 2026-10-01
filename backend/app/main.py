@@ -13,10 +13,9 @@ from app.core.logging import configure_logging
 from app.core.redis import redis
 from app.core.tasks import broker
 from app.shared.errors import install_error_handlers
+from app.wiring import wire_events
 
-# One line per module router. Event subscriptions also live here, e.g.:
-# from app.modules.notifications.handlers import register as register_notifications
-# register_notifications(bus)
+# One line per module router. Event subscriptions live in app/wiring.py (shared with the worker).
 MODULE_ROUTERS: list[APIRouter] = []
 
 
@@ -48,6 +47,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    wire_events()
     install_error_handlers(app)
     app.include_router(health.router)
     for router in MODULE_ROUTERS:

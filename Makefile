@@ -9,7 +9,7 @@ define if_app
 	@if [ -f $(1) ]; then $(2); else echo "$(dir $(1)): not scaffolded yet — skipped"; fi
 endef
 
-up:            ## postgres(pgvector), redis, backend, worker (Taskiq), frontend, bot
+up:            ## postgres(pgvector), redis, backend, worker + scheduler (Taskiq), frontend, bot
 	docker compose up -d --build
 
 down:

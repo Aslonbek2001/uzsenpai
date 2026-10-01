@@ -73,9 +73,14 @@ a deployment without `ENV` refuses to start; dev-only features check `settings.i
 
 ## Events and outbox
 
-- `bus.publish(session, event)` queues the event; handlers run only after commit.
-- `bus.publish(session, event, durable=True)` also writes `core_outbox` in the same transaction; the Taskiq
-  worker processes it with retries; handlers are idempotent (dedupe by `event.id`).
+- `bus.publish(session, event)` queues the event; in-process handlers (`bus.subscribe`) run only after commit.
+- `bus.publish(session, event, durable=True)` also writes one `core_outbox` row per durable handler
+  (`bus.subscribe_durable(Event, "<module>.<name>", fn)`, `fn(session, event)`) in the same transaction.
+  Right after commit a Taskiq task is kicked; a sweeper (every 30 s) is the fallback. 10 attempts with backoff,
+  then `dead`; done rows purged after 30 days. The handler's DB writes commit together with the "done" mark;
+  external side effects are at-least-once → dedupe by `event.id`. Durable handler names are stored in the DB:
+  never rename one while rows may be pending. Code: `app/core/outbox*.py`.
+- Subscriptions are registered in `app/wiring.py` (used by both the API and the worker), never in modules.
 
 ## Where things go — quick decisions
 

@@ -10,6 +10,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
+import app.core.outbox  # core tables (the outbox) for autogenerate
 import app.modules
 from app.core.config import settings
 from app.core.db import Base

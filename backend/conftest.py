@@ -65,6 +65,8 @@ async def db_session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
 @pytest.fixture
 async def app(db_session: AsyncSession) -> AsyncIterator[FastAPI]:
     application = create_app()
+    # Rows written here live in a rolled-back transaction the worker could never see: don't enqueue them.
+    bus.on_outbox_committed = None
 
     async def _session() -> AsyncIterator[AsyncSession]:
         # Mirrors get_session: roll back on error (so tests see what production would keep), commit otherwise.

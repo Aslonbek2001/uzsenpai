@@ -57,6 +57,15 @@ services:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
 
+  scheduler:  # exactly one replica — it enqueues periodic tasks (outbox sweep/purge, reminders)
+    build: { context: ./backend, target: worker }
+    env_file: [{ path: ./backend/.env, required: false }]
+    environment: *backend-env
+    command: ["taskiq", "scheduler", "app.scheduler:scheduler"]
+    volumes: ["./backend/app:/app/app:ro"]
+    depends_on:
+      redis: { condition: service_healthy }
+
 volumes:
   pgdata:
   redisdata:
