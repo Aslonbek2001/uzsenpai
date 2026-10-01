@@ -3,7 +3,7 @@
 # compose.yaml lives in the repo root, so `docker compose …` works from any subfolder
 LOCALES := uz ru en ja
 
-up:            ## postgres(pgvector), redis, backend, worker (arq), frontend, bot
+up:            ## postgres(pgvector), redis, backend, worker (Taskiq), frontend, bot
 	docker compose up -d
 
 down:

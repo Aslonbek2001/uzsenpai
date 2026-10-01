@@ -17,7 +17,7 @@ Check:
 2. **AuthN** — JWT expiry/refresh, password hashing (argon2/bcrypt), Telegram login hash verification,
    service token between bot and backend, no tokens in URLs or logs.
 3. **Input** — Pydantic constraints (lengths, enums), no raw SQL string building, file upload type/size limits.
-4. **Payments** (Click/Payme/Uzum) — webhook signature verification, idempotency, amount checked server-side,
+4. **Payments** (Rahmat, fake in dev) — webhook signature verification, idempotency, amount checked server-side,
    no trusting client prices.
 5. **AI / RAG** — user input never concatenated into system prompts; retrieved documents delimited and
    marked as data; tool outputs not executed blindly; per-user rate limits and token quotas on AI endpoints;

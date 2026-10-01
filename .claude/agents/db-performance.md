@@ -20,7 +20,7 @@ Check:
    `ef_search` tuned, filtering before/after ANN understood, `LIMIT` always present.
 5. **Caching** — read-heavy, rarely-changing data (lesson catalogue, kanji, guides) cached in Redis with
    explicit invalidation; HTTP `ETag`/`Cache-Control` for public content.
-6. **Async** — no sync DB/HTTP calls in async paths; connection pool size vs workers; long jobs moved to arq.
+6. **Async** — no sync DB/HTTP calls in async paths; connection pool size vs workers; long jobs moved to Taskiq.
 7. **Payload** — response models don't over-fetch; large lists not returned unpaginated.
 
 Output: ranked list (biggest win first) with file:line, evidence, expected impact, and the exact fix

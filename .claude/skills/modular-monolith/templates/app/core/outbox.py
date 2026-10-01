@@ -1,6 +1,6 @@
 """app/core/outbox.py — durable events written in the same transaction as the change that caused them.
 
-The arq worker polls rows with processed_at IS NULL, runs the registered durable handler (idempotent by id),
+The Taskiq worker polls rows with processed_at IS NULL, runs the registered durable handler (idempotent by id),
 then sets processed_at. Failed handlers are retried with backoff; after N attempts the row is flagged.
 """
 

@@ -29,7 +29,7 @@ frontend/   React SPA (talks to backend over HTTP only)
 bot/        Telegram bot on aiogram 3 (talks to backend over HTTP only)
 compose.yaml  docker compose for local dev (repo root, works from any subfolder)
 infra/      deploy scripts (reverse proxy / hosting: see docs/STACK.md)
-docs/       STACK.md, ADRs (docs/adr/NNNN-title.md)
+docs/       STACK.md, ADRs (docs/adr/NNNN-title.md), provider prep notes (docs/payments/)
 scripts/    repo-wide checks (i18n)
 ```
 
@@ -67,7 +67,7 @@ Each app folder has its own CLAUDE.md — read it before working there.
 ## Commands (run from repo root)
 
 ```
-make up            # docker compose: postgres(pgvector), redis, backend, worker (arq), frontend, bot
+make up            # docker compose: postgres(pgvector), redis, backend, worker (Taskiq), frontend, bot
 make down
 make lint          # ruff + mypy + import-linter (backend, bot), eslint + tsc (frontend), i18n check
 make test          # all tests

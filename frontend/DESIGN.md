@@ -186,7 +186,8 @@ readers pronounce it correctly, audio for kana/kanji has a visible play control.
   button. One primary action per card.
 - Free vs paid is marked with a small "Premium" label (`--yamabuki-ink` on `--yamabuki-soft`), never by greying out content the user
   can't understand.
-- Checkout as a bottom sheet (mobile) / dialog (desktop): order summary, Click / Payme / Uzum options,
+- Checkout as a bottom sheet (mobile) / dialog (desktop): order summary, payment method (Rahmat page:
+  cards, Click / Payme / Uzum),
   total, one pay button that keeps its size while processing. After paying: receipt + clear next step.
 - Orders screen: status timeline (Qabul qilindi → Toʻlandi → Ishlanmoqda → Tayyor), expert's name and
   photo, deadline, deliverables to download, chat with the expert.

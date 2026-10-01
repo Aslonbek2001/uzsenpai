@@ -34,10 +34,9 @@ Update → ThrottlingMiddleware → BackendUserMiddleware (get/create user via `
 - Callback data only via `CallbackData` factories; keyboards built in `keyboards/`.
 - FSM states for multi-step flows (resume quick-start, visa status input), Redis storage, always a
   cancel button.
-- Paid services: list products from `GET /api/v1/catalog/products?currency=UZS` (localized by backend). How the
-  bot takes payment is an **open decision** (docs/STACK.md): Telegram requires Telegram Stars for digital
-  goods sold inside bots, so until an ADR decides, the bot only links to the website checkout and never
-  shows provider invoices. Order status messages are sent by the backend `notifications` module.
+- Paid services: list products from `GET /api/v1/catalog/products?currency=UZS` (localized by backend). The bot
+  never takes payment itself (ADR 0004): "Pay" opens the website checkout (Mini App / link) for the same
+  product and currency; no provider invoices, no Telegram Stars. Order status messages are sent by the backend `notifications` module.
 - AI answers: backend streaming endpoint → edit message at most ~1/sec; final edit with the full text.
 - Errors: api_client raises `BackendError(code, params)`; handlers reply `error_text(err)` from
   `services/errors.py` — a dict of backend code → `__("English msgid")` (static, so pybabel extracts it).

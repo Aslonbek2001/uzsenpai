@@ -47,7 +47,7 @@ modules/<name>/
 ├── repositories/        __init__.py (re-exports), <aggregate>_repository.py
 ├── models/              __init__.py (imports ALL models for Alembic), <aggregate>.py
 ├── domain/              enums.py, rules.py | state_machine.py, events.py, exceptions.py — no I/O
-├── handlers/ jobs/      (optional) event reactions, arq jobs
+├── handlers/ jobs/      (optional) event reactions, Taskiq tasks
 └── tests/               conftest.py (module fixtures), test_<rules|domain>.py, test_<resource>_api.py
 ```
 
@@ -74,7 +74,7 @@ a deployment without `ENV` refuses to start; dev-only features check `settings.i
 ## Events and outbox
 
 - `bus.publish(session, event)` queues the event; handlers run only after commit.
-- `bus.publish(session, event, durable=True)` also writes `core_outbox` in the same transaction; the arq
+- `bus.publish(session, event, durable=True)` also writes `core_outbox` in the same transaction; the Taskiq
   worker processes it with retries; handlers are idempotent (dedupe by `event.id`).
 
 ## Where things go — quick decisions
@@ -90,7 +90,7 @@ a deployment without `ENV` refuses to start; dev-only features check `settings.i
 | Shared value type (Money, LocalizedText, Locale) | `app/shared/` (no business logic) |
 | Infrastructure (db, redis, settings, bus) | `app/core/` |
 | Two modules keep calling each other both ways | boundary is wrong → `architect` subagent + `/adr` |
-| Long work (PDF, embeddings, AI batch) | arq job in the module's `jobs/`, triggered via outbox |
+| Long work (PDF, embeddings, AI batch) | Taskiq task in the module's `jobs/`, triggered via outbox |
 
 After creating a module run `make importlinter` (contracts are generated from the existing modules).
 

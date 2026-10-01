@@ -1,6 +1,6 @@
 ---
 name: payments-billing
-description: UzSenpai money architecture — catalog (products, prices per currency, entitlement keys), Money type, checkout, national (Click, Payme, Uzum — UZS) and international (USD/JPY/EUR) payment providers behind one PaymentProvider contract and registry, signed idempotent webhooks via a shared ledger, payment state machine, entitlement grants and quota, human-fulfilled orders, refunds, reconciliation. Use whenever touching catalog, billing, orders or experts modules, a payment provider, a paywall, checkout UI, prices or currencies, or any code path that grants access to a paid feature.
+description: UzSenpai money architecture — catalog (products, prices per currency, entitlement keys), Money type, checkout, national (Rahmat — UZS) and international (USD/JPY/EUR) payment providers behind one PaymentProvider contract and registry, signed idempotent webhooks via a shared ledger, payment state machine, entitlement grants and quota, human-fulfilled orders, refunds, reconciliation. Use whenever touching catalog, billing, orders or experts modules, a payment provider, a paywall, checkout UI, prices or currencies, or any code path that grants access to a paid feature.
 user-invocable: false
 paths:
   - "backend/app/modules/catalog/**"
@@ -106,10 +106,13 @@ Provider-specific data (e.g. Payme txn times/state) is stored in `payment.provid
 | Provider | Scope | Status |
 |---|---|---|
 | `fake` | test/dev | complete (signed JSON webhooks) |
+| `rahmat` | national, UZS — the chosen provider (ADR 0002) | not started — waits for merchant API docs + sandbox; prep checklist in `docs/payments/rahmat.md` |
 | `payme` | national, UZS (tiyin, JSON-RPC, Basic auth) | `ready=False`: Check/Create/Perform/Cancel/CheckTransaction implemented with stored state and tested; GetStatement missing; verify codes against docs + sandbox |
 | `click` | national, UZS (prepare/complete, MD5 sign) | `ready=False`: prepare/complete with exact amounts, Click `error` handling, prepare-id check; verify fields/codes against docs + sandbox |
-| `uzum` | national, UZS | not started — docs first |
-| international | USD/JPY/EUR | provider undecided (docs/STACK.md) — ADR, then same contract |
+| international | USD/JPY/EUR | Rahmat if it accepts foreign cards, otherwise `octo` (ADR 0003) — same contract |
+
+`payme` and `click` are **reference adapters only** (not planned for production since ADR 0002): they show how
+a stateful JSON-RPC and a signed prepare/complete protocol plug into the ledger. Copy their structure for `rahmat`.
 
 ## Payment state machine (`domain/state_machine.py`)
 
@@ -136,4 +139,4 @@ timestamp, notification in the user's locale; SLA from the product; overdue orde
 - The client never sends an amount. Webhooks: no user auth, signature only; respond fast; heavy work via outbox.
 - Money tables have `created_at`/`updated_at` and are append-only where possible.
 - Nightly reconciliation job per provider compares statements with `billing_payments` and reports mismatches.
-- In the Telegram bot, in-bot payment is an open decision (Telegram Stars rule) — the bot links to web checkout.
+- In the Telegram bot there is no in-bot payment (ADR 0004) — the bot opens the website checkout.

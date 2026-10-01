@@ -1,7 +1,7 @@
 # Backend — FastAPI modular monolith
 
-Python 3.12, FastAPI, SQLAlchemy 2.0 (async) + asyncpg, Alembic, Pydantic v2, pydantic-settings,
-PostgreSQL 16 + pgvector, Redis + arq, Anthropic Python SDK. Package manager: **uv**. (docs/STACK.md)
+Python 3.13, FastAPI, SQLAlchemy 2.0 (async) + asyncpg, Alembic, Pydantic v2, pydantic-settings,
+PostgreSQL 17 + pgvector, Redis + Taskiq, Anthropic Python SDK. Package manager: **uv**. (docs/STACK.md)
 Runnable reference code: `modular-monolith` skill (core, shared, `visa` module, conftest) and
 `payments-billing` skill (`catalog`, `billing` with providers). Also `llm-rag`, `i18n` skills.
 
@@ -61,7 +61,7 @@ modules/<name>/
 ├── models/                  # SQLAlchemy models, one file per aggregate; __init__ imports all (Alembic)
 ├── domain/                  # pure rules: enums.py, rules.py / state_machine.py, events.py, exceptions.py
 ├── handlers/                # (optional) reactions to other modules' events
-├── jobs/                    # (optional) arq background jobs
+├── jobs/                    # (optional) Taskiq background tasks
 └── tests/                   # unit (domain, services) + API tests for this module; conftest.py for module fixtures
 ```
 
@@ -92,7 +92,7 @@ a new resource gets its own `routers/<resource>.py`, `schemas/<resource>.py`, a 
 - `ENV` is required (`local|test|staging|production`); fake/skeleton payment adapters run only in local/test.
 - Events: `bus.publish(session, event)` runs handlers after commit; `durable=True` writes to `core_outbox` in the
   same transaction (anything that must not be lost: reminders, receipts, orders after payment).
-- Everything async. No blocking I/O in request path; heavy jobs (PDF, ingestion, embeddings) go to arq.
+- Everything async. No blocking I/O in request path; heavy jobs (PDF, ingestion, embeddings) go to Taskiq.
 - Errors: module exceptions in `domain/exceptions.py` subclassing `AppError` with a code `<module>.<reason>`.
 - Config only through `app.core.config.settings`. Never read `os.environ` elsewhere.
 - Migrations: `uv run alembic revision --autogenerate -m "<module>: <change>"`, then **read and fix** it.
@@ -117,7 +117,8 @@ Details and runnable code: `payments-billing` skill.
   Never floats. Prices live only in `catalog`, **one row per currency** (UZS for national checkout; USD/JPY/EUR
   for international) — no FX conversion. The client sends `product_id` + `currency`; the server computes the amount.
 - **Providers** implement one `PaymentProvider` contract, one package each under `billing/providers/`:
-  national (UZS): Click, Payme, Uzum; international (USD/JPY/EUR): chosen by ADR. Only providers listed in
+  national (UZS): Rahmat (ADR 0002 — one integration covers cards and Click/Payme/Uzum wallets);
+  international: Rahmat if it accepts foreign-issued cards, otherwise Octo (ADR 0003). Only providers listed in
   `PAYMENT_PROVIDERS_ENABLED` are active. UZS checkout offers national providers first, other currencies
   international ones.
 - **Webhooks** `/api/v1/billing/webhooks/{provider}`: the adapter verifies signature/credentials FIRST, validates
@@ -126,7 +127,7 @@ Details and runnable code: `payments-billing` skill.
   state machine, grants from the checkout snapshot and the durable `PaymentSucceeded` event — one transaction,
   committed before the provider gets its ack.
 - Startup refuses: unknown providers, enabled providers without credentials, `fake` outside local/test, and
-  adapters marked `ready=False` (Payme/Click skeletons) outside local/test.
+  adapters marked `ready=False` (Rahmat until verified on its sandbox) outside local/test.
 - **Entitlements are the only access check:** `Depends(require_entitlement(Key.X))` or `BillingFacade.has_access`.
   Quota is consumed **after** the paid action succeeded.
 - **Orders** (human-fulfilled) are created from `PaymentSucceeded` when `fulfilment == "human"`; status flow
@@ -138,7 +139,8 @@ Details and runnable code: `payments-billing` skill.
 - Structured data model (education, work history, licences/qualifications, JLPT, 志望動機, 自己PR), versioned.
   Both Japanese formats render from the same data: JIS-style 履歴書 and 職務経歴書, plus an English CV.
 - AI translates/rewrites into business Japanese (keigo) via `ai.public`; the user approves before export.
-- PDF rendering runs in the worker (HTML template → PDF), stored via `files`, A4, Japanese fonts embedded.
+- PDF rendering runs in the worker: headless Chromium via Playwright (ADR 0005), trusted HTML template → A4 PDF,
+  JavaScript and network disabled during render, Japanese fonts embedded, stored via `files`.
 
 ## Interview (module `interview`)
 

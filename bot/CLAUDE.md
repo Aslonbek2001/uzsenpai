@@ -1,6 +1,6 @@
 # Bot — Telegram, aiogram 3
 
-Python 3.12, aiogram 3.x, httpx (backend client), Redis FSM storage, pydantic-settings. Package manager: **uv**.
+Python 3.13, aiogram 3.x, httpx (backend client), Redis FSM storage, pydantic-settings. Package manager: **uv**.
 Architecture details and code templates: the `bot-architecture` skill. Languages: the `i18n` skill.
 
 The bot is a **thin client of the backend**. It never opens a DB connection and never calls Anthropic.
@@ -37,8 +37,8 @@ bot/locales/           # {uz,ru,en,ja}/LC_MESSAGES/messages.po (gettext via aiog
   `/language` changes it any time and saves it to the backend profile (shared with the website).
   Commands menu (`set_my_commands`) is registered for each language.
 - Paid services: the bot never shows hard-coded prices; it gets products from the backend and links to the
-  website checkout. In-bot payment (Telegram Stars rule for digital goods) is an open decision — see
-  docs/STACK.md; don't implement provider invoices in the bot before an ADR.
+  website checkout. No in-bot payments (ADR 0004): no provider invoices,
+  no Telegram Stars.
 - AI answers: call the backend streaming endpoint and edit the message in chunks (throttle to ~1 edit/sec).
 - Long-running work never blocks a handler; the backend does it and its `notifications` module messages the
   user directly through the Telegram Bot API (the bot process is not involved).
