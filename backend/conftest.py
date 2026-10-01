@@ -6,11 +6,12 @@ Provides: engine (test DB built by the real Alembic migrations), per-test DB tra
 Every test runs inside one outer transaction that is rolled back at the end; the app's own commits become
 SAVEPOINT releases, so tests never leak data into each other. Point TEST_DATABASE_URL at the compose
 Postgres test database (`uzsenpai_test`). PostgreSQL only — SQLite's SAVEPOINT handling breaks this isolation.
-Auth fixtures (fake current user) are added together with the auth module.
+Auth: `user_id` + `auth_headers` give a real user and a real access token.
 """
 
 import asyncio
 import os
+import uuid
 from collections.abc import AsyncIterator
 from pathlib import Path
 
@@ -21,6 +22,11 @@ TEST_DATABASE_URL = os.environ.get(
 # test DB too.
 os.environ["ENV"] = "test"
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+# Redis DB 15 is reserved for tests and flushed before each test (rate limits, codes)
+os.environ["REDIS_URL"] = os.environ.get("TEST_REDIS_URL", "redis://localhost:6379/15")
+os.environ["BOT_SERVICE_TOKEN"] = "test-bot-service-token-0123456789abcdef"  # noqa: S105 — test-only value
+os.environ["TELEGRAM_BOT_TOKEN"] = "123456:test-telegram-bot-token"  # noqa: S105 — test-only value
+os.environ["REFRESH_COOKIE_SECURE"] = "false"  # the test client talks plain http
 
 import pytest
 from alembic import command
@@ -32,7 +38,10 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engin
 
 from app.core.db import get_session
 from app.core.events import bus
+from app.core.redis import redis
 from app.main import create_app
+from app.modules.auth.testing import auth_headers_for
+from app.modules.users.testing import create_user
 
 BACKEND_DIR = Path(__file__).resolve().parent
 
@@ -48,6 +57,11 @@ async def engine() -> AsyncIterator[AsyncEngine]:
     await asyncio.to_thread(command.upgrade, alembic_cfg, "head")
     yield eng
     await eng.dispose()
+
+
+@pytest.fixture(autouse=True)
+async def _clean_redis() -> None:
+    await redis.flushdb()
 
 
 @pytest.fixture
@@ -88,3 +102,14 @@ async def app(db_session: AsyncSession) -> AsyncIterator[FastAPI]:
 async def client(app: FastAPI) -> AsyncIterator[AsyncClient]:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
+
+
+@pytest.fixture
+async def user_id(db_session: AsyncSession) -> uuid.UUID:
+    return await create_user(db_session)
+
+
+@pytest.fixture
+def auth_headers(user_id: uuid.UUID) -> dict[str, str]:
+    """A real access token for `user_id` (signed with the test JWT secret)."""
+    return auth_headers_for(user_id)

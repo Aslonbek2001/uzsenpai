@@ -35,7 +35,7 @@ async def ask_language(message: Message) -> None:
 
 @router.callback_query(LangCb.filter(F.code.in_(LANGUAGE_NAMES)))
 async def set_language(query: CallbackQuery, callback_data: LangCb, api: BackendClient, user: BotUser, i18n: I18n) -> None:
-    await api.update_locale(user.id, callback_data.code)
+    await api.update_locale(query.from_user.id, callback_data.code)
     forget_user(query.from_user.id)  # next update re-reads the profile with the new locale
     i18n.ctx_locale.set(callback_data.code)  # reply in the new language right away
     await query.answer()

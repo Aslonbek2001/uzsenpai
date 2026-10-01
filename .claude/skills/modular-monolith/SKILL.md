@@ -16,8 +16,8 @@ owns its tables, logic and API, is internally layered, and is built from small f
 1. **Own your data.** A table belongs to one module (prefix `<module>_`). Other modules never query it.
 2. **Talk through `public.py`.** The only importable surface: facade class(es) + DTOs (+ re-exported events).
    Tests of other modules may also import `<module>.testing` factories. Enforced by `module-independence`.
-3. **Layers inside a module** (enforced by `module-layers`): `testing` → `routers | public | handlers | jobs` →
-   `services` → `providers` → `schemas | repositories` → `models` → `domain`. Lower never imports higher.
+3. **Layers inside a module** (enforced by `module-layers`): `testing` → `routers | handlers | jobs` → `public`
+   → `services` → `providers` → `schemas | repositories` → `models` → `domain`. Lower never imports higher.
 4. **Small files.** Python ≤ 400 lines (tests ≤ 600) — the `size_guard` hook flags a bigger file right after
    it is written and Claude must split it before continuing. Split by
    responsibility: one resource per `routers/<resource>.py` + `schemas/<resource>.py`, one use-case group per

@@ -12,11 +12,13 @@ from app.core.db import engine
 from app.core.logging import configure_logging
 from app.core.redis import redis
 from app.core.tasks import broker
+from app.modules.auth.routers import router as auth_router
+from app.modules.users.routers import router as users_router
 from app.shared.errors import install_error_handlers
 from app.wiring import wire_events
 
 # One line per module router. Event subscriptions live in app/wiring.py (shared with the worker).
-MODULE_ROUTERS: list[APIRouter] = []
+MODULE_ROUTERS: list[APIRouter] = [auth_router, users_router]
 
 
 @asynccontextmanager

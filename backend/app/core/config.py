@@ -1,9 +1,12 @@
 """app/core/config.py — the only place that reads environment variables."""
 
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Self
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEV_JWT_SECRET = "local-dev-only-jwt-secret-change-me-0000"  # noqa: S105 — refused outside local/test
 
 
 class Settings(BaseSettings):
@@ -17,17 +20,42 @@ class Settings(BaseSettings):
     db_pool_size: int = 10
     db_max_overflow: int = 10
 
-    # Redis DB indexes: 0 = app cache/rate limits, 1 = Taskiq broker, 2 = bot FSM (bot's own setting)
+    # Redis DB indexes: 0 = app cache/rate limits/auth codes, 1 = Taskiq broker, 2 = bot FSM (bot's own setting)
     redis_url: str = "redis://localhost:6379/0"
     taskiq_broker_url: str = "redis://localhost:6379/1"
 
     cors_origins: list[str] = ["http://localhost:5173"]
     public_web_url: str = "http://localhost:5173"
 
+    # Auth (ADR 0007)
+    jwt_secret: str = DEV_JWT_SECRET
+    refresh_cookie_secure: bool = True  # False only for plain-http local development
+    telegram_bot_token: str = ""  # verifies Telegram Login Widget data
+    bot_service_token: str = ""  # the bot's credential for /api/v1 (with X-Telegram-User-Id)
+
     @property
     def is_local(self) -> bool:
         """Dev/test only features (fake payment provider, skeleton adapters) are allowed only here."""
         return self.env in ("local", "test")
+
+    @model_validator(mode="after")
+    def _refuse_unsafe_deployments(self) -> Self:
+        if self.is_local:
+            return self
+        problems = []
+        if self.jwt_secret == DEV_JWT_SECRET or len(self.jwt_secret) < 32:
+            problems.append("JWT_SECRET must be a random value of at least 32 characters")
+        if len(self.bot_service_token) < 32:
+            problems.append("BOT_SERVICE_TOKEN must be a random value of at least 32 characters")
+        if not self.telegram_bot_token:
+            problems.append("TELEGRAM_BOT_TOKEN is required")
+        if "*" in self.cors_origins:
+            problems.append("CORS_ORIGINS must list exact origins (credentials are allowed)")
+        if not self.refresh_cookie_secure:
+            problems.append("REFRESH_COOKIE_SECURE must be true outside local/test")
+        if problems:
+            raise ValueError("; ".join(problems))
+        return self
 
 
 @lru_cache

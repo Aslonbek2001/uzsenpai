@@ -28,14 +28,15 @@ ignore_imports =
 # Inside every module: upper layers may import lower ones, never the reverse.
 # (x) = optional layer; a | b = siblings that must not import each other.
 [importlinter:contract:module-layers]
-name = Module internal layers: routers/public, services, providers, schemas/repositories, models, domain
+name = Module internal layers: routers/handlers/jobs, public, services, providers, schemas/repositories, models, domain
 type = layers
 containers =
     app.modules.auth
     app.modules.users
 layers =
     (testing)
-    (routers) | (public) | (handlers) | (jobs)
+    (routers) | (handlers) | (jobs)
+    (public)
     (services)
     (providers)
     (schemas) | (repositories)

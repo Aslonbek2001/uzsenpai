@@ -15,7 +15,7 @@ The bot is a **client**, like the website. It never touches the DB or Anthropic;
 
 ```
 Update → ThrottlingMiddleware → BackendUserMiddleware (get/create user via `users` module's
-       /api/v1/bot/users, cached 60 s; put `user` + `locale` in data)
+       /api/v1/auth/bot/users, cached 60 s; put `user` + `locale` in data)
        → UzI18nMiddleware (locale from data) → Router(feature) → handler → api_client → backend
 ```
 

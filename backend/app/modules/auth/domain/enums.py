@@ -16,3 +16,8 @@ class SessionRevokeReason(StrEnum):
     REUSE_DETECTED = "reuse_detected"  # a rotated token was reused → the whole family is revoked
     PASSWORD_CHANGED = "password_changed"  # noqa: S105 — a status code, not a secret
     ACCOUNT_DELETED = "account_deleted"
+
+
+class CodePurpose(StrEnum):
+    SIGNUP = "signup"
+    PASSWORD_RESET = "password_reset"  # noqa: S105 — a purpose name, not a secret

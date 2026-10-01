@@ -41,12 +41,15 @@ class BackendClient:
 
     async def get_or_create_telegram_user(self, telegram_id: int, first_name: str, locale_hint: str) -> BotUser:
         data = await self._request(
-            "POST", "/bot/users", json={"telegram_id": telegram_id, "first_name": first_name, "locale_hint": locale_hint}
+            "POST", "/auth/bot/users", json={"telegram_id": telegram_id, "first_name": first_name, "locale_hint": locale_hint}
         )
         return BotUser.model_validate(data)
 
-    async def update_locale(self, user_id: str, locale: str) -> None:
-        await self._request("PATCH", f"/bot/users/{user_id}", json={"locale": locale, "language_confirmed": True})
+    async def update_locale(self, telegram_id: int, locale: str) -> None:
+        # The bot acts for the user: service token (client default header) + X-Telegram-User-Id
+        await self._request(
+            "PATCH", "/users/me", json={"locale": locale}, headers={"X-Telegram-User-Id": str(telegram_id)}
+        )
 
     async def list_products(self, locale: str, currency: str = "UZS") -> list[dict[str, Any]]:
         # Prices and texts come localized from the backend (GET /api/v1/catalog/products) — never hardcoded

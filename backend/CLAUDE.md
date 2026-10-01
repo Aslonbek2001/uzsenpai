@@ -71,7 +71,8 @@ modules/<name>/
 
 ```
 testing
-routers | public | handlers | jobs      ← siblings: may not import each other
+routers | handlers | jobs              ← siblings: may not import each other
+public                                 ← the facade; its own routers may use it (e.g. auth's current_user)
 services
 providers
 schemas | repositories

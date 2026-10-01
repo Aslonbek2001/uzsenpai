@@ -15,3 +15,9 @@ async def create_user(
     session.add(user)
     await session.flush()
     return user.id
+
+
+async def set_role(session: AsyncSession, user_id: uuid.UUID, role: UserRole) -> None:
+    user = await session.get_one(User, user_id)
+    user.role = role
+    await session.flush()
