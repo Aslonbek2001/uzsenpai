@@ -52,6 +52,11 @@ Each app folder has its own CLAUDE.md — read it before working there.
 5. **Access to paid features only through entitlements** (`billing.public`). Prices live only in `catalog` (one price per currency; national UZS + international).
 6. **Secrets** only via env vars (`.env`, never committed). Each app has its own `.env.example`.
 7. Decisions that change a boundary, add infra or change docs/STACK.md → short ADR via `/adr`.
+8. **Apps build and deploy independently.** Each app has its own lockfile (`uv.lock` / `pnpm-lock.yaml`),
+   `Dockerfile` with its own folder as build context, `.dockerignore`, `.env.example` and Makefile targets
+   (`lint-<app>`, `test-<app>`). No root-level workspace, no code imported across app folders — the only shared
+   contract is the backend OpenAPI schema (`/api/v1`, changes stay backward compatible so the bot and frontend
+   can deploy on their own schedule). A bot change rebuilds and redeploys only the bot.
 
 ## Architecture knowledge (skills load automatically when relevant)
 
