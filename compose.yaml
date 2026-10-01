@@ -1,0 +1,62 @@
+# Local development. Each app has its own build context, so a change in one app rebuilds only that app:
+#   docker compose up -d --build backend      # rebuild + restart only the API
+#   docker compose up -d --build --no-deps bot   # (once the bot exists) touches nothing else
+# Frontend and bot services are added when those apps are scaffolded.
+name: uzsenpai
+
+x-backend-env: &backend-env
+  ENV: local
+  DATABASE_URL: postgresql+asyncpg://uzsenpai:uzsenpai@postgres:5432/uzsenpai
+  REDIS_URL: redis://redis:6379/0
+  TASKIQ_BROKER_URL: redis://redis:6379/1
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: uzsenpai
+      POSTGRES_PASSWORD: uzsenpai
+      POSTGRES_DB: uzsenpai
+    ports: ["127.0.0.1:5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uzsenpai -d uzsenpai"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    ports: ["127.0.0.1:6379:6379"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: { context: ./backend, target: api }
+    env_file: [{ path: ./backend/.env, required: false }]
+    environment: *backend-env
+    command: ["fastapi", "dev", "app/main.py", "--host", "0.0.0.0", "--port", "8000"]
+    ports: ["127.0.0.1:8000:8000"]
+    volumes: ["./backend/app:/app/app:ro"]  # live reload of code; dependencies stay in the image
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  worker:
+    build: { context: ./backend, target: worker }
+    env_file: [{ path: ./backend/.env, required: false }]
+    environment: *backend-env
+    volumes: ["./backend/app:/app/app:ro"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  redisdata:

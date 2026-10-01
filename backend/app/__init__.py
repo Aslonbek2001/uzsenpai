@@ -1,0 +1,1 @@
+"""UzSenpai backend."""
